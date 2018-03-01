@@ -101,12 +101,6 @@ namespace GraphicsTutorial
             string extension = null;
             switch (graphicsDevice.BackendType)
             {
-                case GraphicsBackend.Direct3D11:
-                    extension = "hlsl.bytes";
-                    break;
-                case GraphicsBackend.Vulkan:
-                    extension = "spv";
-                    break;
                 case GraphicsBackend.OpenGL:
                     extension = "glsl";
                     break;
