@@ -22,8 +22,8 @@ namespace GraphicsTutorial
             {
                 X = 100,
                 Y = 100,
-                WindowWidth = 960,
-                WindowHeight = 540,
+                WindowWidth = 1024,
+                WindowHeight = 768,
                 WindowTitle = "Veldrid Tutorial"
             };
 
