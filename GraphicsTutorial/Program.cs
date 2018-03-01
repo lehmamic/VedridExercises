@@ -47,16 +47,15 @@ namespace GraphicsTutorial
 
             var quadVertices = new[]
             {
-                new VertexPositionColor(new Vector2(-.75f, .75f), RgbaFloat.Red),
-                new VertexPositionColor(new Vector2(.75f, .75f), RgbaFloat.Green),
-                new VertexPositionColor(new Vector2(-.75f, -.75f), RgbaFloat.Blue),
-                new VertexPositionColor(new Vector2(.75f, -.75f), RgbaFloat.Yellow)
+                new VertexPositionColor(new Vector3(-.75f, -.75f, 0f), RgbaFloat.Red),
+                new VertexPositionColor(new Vector3(.75f, -.75f, 0f), RgbaFloat.Green),
+                new VertexPositionColor(new Vector3(0f, .75f, 0f), RgbaFloat.Blue),
             };
 
-            ushort[] quadIndices = { 0, 1, 2, 3 };
+            ushort[] quadIndices = { 0, 1, 2 };
 
-            vertexBuffer = factory.CreateBuffer(new BufferDescription(4 * VertexPositionColor.SizeInBytes, BufferUsage.VertexBuffer));
-            indexBuffer = factory.CreateBuffer(new BufferDescription(4 * sizeof(ushort), BufferUsage.IndexBuffer));
+            vertexBuffer = factory.CreateBuffer(new BufferDescription(3 * VertexPositionColor.SizeInBytes, BufferUsage.VertexBuffer));
+            indexBuffer = factory.CreateBuffer(new BufferDescription(3 * sizeof(ushort), BufferUsage.IndexBuffer));
 
             graphicsDevice.UpdateBuffer(vertexBuffer, 0, quadVertices);
             graphicsDevice.UpdateBuffer(indexBuffer, 0, quadIndices);
@@ -79,7 +78,7 @@ namespace GraphicsTutorial
             pipelineDescription.RasterizerState = new RasterizerStateDescription(
                 cullMode: FaceCullMode.Back,
                 fillMode: PolygonFillMode.Solid,
-                frontFace: FrontFace.Clockwise,
+                frontFace: FrontFace.CounterClockwise,
                 depthClipEnabled: true,
                 scissorTestEnabled: false);
 
@@ -129,7 +128,7 @@ namespace GraphicsTutorial
             commandList.SetPipeline(pipeline);
             // Issue a Draw command for a single instance with 4 indices.
             commandList.DrawIndexed(
-                indexCount: 4,
+                indexCount: 3,
                 instanceCount: 1,
                 indexStart: 0,
                 vertexOffset: 0,
