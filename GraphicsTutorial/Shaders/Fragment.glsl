@@ -1,8 +1,8 @@
 #version 330 core
 
-out vec4 fsout_Color;
+out vec4 Color;
 
 void main()
 {
-    fsout_Color = vec4(1,0,0,1);
+    Color = vec4(1,0,0,1);
 }

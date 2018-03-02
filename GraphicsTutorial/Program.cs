@@ -45,20 +45,20 @@ namespace GraphicsTutorial
         {
             ResourceFactory factory = graphicsDevice.ResourceFactory;
 
-            var quadVertices = new[]
+            var triangleVertices = new[]
             {
                 new VertexPositionColor(new Vector3(-.75f, -.75f, 0f), RgbaFloat.Red),
                 new VertexPositionColor(new Vector3(.75f, -.75f, 0f), RgbaFloat.Green),
                 new VertexPositionColor(new Vector3(0f, .75f, 0f), RgbaFloat.Blue),
             };
 
-            ushort[] quadIndices = { 0, 1, 2 };
+            ushort[] triangleIndices = { 0, 1, 2 };
 
             vertexBuffer = factory.CreateBuffer(new BufferDescription(3 * VertexPositionColor.SizeInBytes, BufferUsage.VertexBuffer));
             indexBuffer = factory.CreateBuffer(new BufferDescription(3 * sizeof(ushort), BufferUsage.IndexBuffer));
 
-            graphicsDevice.UpdateBuffer(vertexBuffer, 0, quadVertices);
-            graphicsDevice.UpdateBuffer(indexBuffer, 0, quadIndices);
+            graphicsDevice.UpdateBuffer(vertexBuffer, 0, triangleVertices);
+            graphicsDevice.UpdateBuffer(indexBuffer, 0, triangleIndices);
 
             VertexLayoutDescription vertexLayout = new VertexLayoutDescription(
                 new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
