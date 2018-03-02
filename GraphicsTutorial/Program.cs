@@ -61,7 +61,7 @@ namespace GraphicsTutorial
             graphicsDevice.UpdateBuffer(indexBuffer, 0, quadIndices);
 
             VertexLayoutDescription vertexLayout = new VertexLayoutDescription(
-                new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
+                new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
                 new VertexElementDescription("Color", VertexElementSemantic.Color, VertexElementFormat.Float4));
 
             vertexShader = LoadShader(graphicsDevice, ShaderStages.Vertex);
