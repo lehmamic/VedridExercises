@@ -4,6 +4,7 @@ using System.Numerics;
 using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
+using Veldrid.Utilities;
 
 namespace GraphicsTutorial
 {
@@ -12,9 +13,9 @@ namespace GraphicsTutorial
         private static CommandList commandList;
         private static DeviceBuffer vertexBuffer;
         private static DeviceBuffer indexBuffer;
-        private static Shader vertexShader;
-        private static Shader fragmentShader;
+        private static DeviceBuffer mvpBuffer;
         private static Pipeline pipeline;
+        private static ResourceSet mvpResourceSet;
 
         static void Main(string[] args)
         {
@@ -30,20 +31,20 @@ namespace GraphicsTutorial
             Sdl2Window window = VeldridStartup.CreateWindow(ref windowCI);
             GraphicsDevice graphicsDevice = VeldridStartup.CreateGraphicsDevice(window, GraphicsBackend.OpenGL);
 
-            CreateResources(graphicsDevice);
+            var factory = new DisposeCollectorResourceFactory(graphicsDevice.ResourceFactory);
+            CreateResources(graphicsDevice, factory);
 
             while (window.Exists)
             {
                 window.PumpEvents();
-                Draw(graphicsDevice);
+                Draw(graphicsDevice, window);
             }
-
-            DisposeResources(graphicsDevice);
         }
 
-        private static void CreateResources(GraphicsDevice graphicsDevice)
+        private static void CreateResources(GraphicsDevice graphicsDevice, ResourceFactory factory)
         {
-            ResourceFactory factory = graphicsDevice.ResourceFactory;
+            commandList = factory.CreateCommandList();
+            commandList.Begin();
 
             var triangleVertices = new[]
             {
@@ -55,47 +56,56 @@ namespace GraphicsTutorial
             ushort[] triangleIndices = { 0, 1, 2 };
 
             vertexBuffer = factory.CreateBuffer(new BufferDescription(3 * VertexPositionColor.SizeInBytes, BufferUsage.VertexBuffer));
+            commandList.UpdateBuffer(vertexBuffer, 0, triangleVertices);
+
             indexBuffer = factory.CreateBuffer(new BufferDescription(3 * sizeof(ushort), BufferUsage.IndexBuffer));
+            commandList.UpdateBuffer(indexBuffer, 0, triangleIndices);
 
-            graphicsDevice.UpdateBuffer(vertexBuffer, 0, triangleVertices);
-            graphicsDevice.UpdateBuffer(indexBuffer, 0, triangleIndices);
+            mvpBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
 
-            VertexLayoutDescription vertexLayout = new VertexLayoutDescription(
-                new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
-                new VertexElementDescription("Color", VertexElementSemantic.Color, VertexElementFormat.Float4));
+            commandList.End();
+            graphicsDevice.SubmitCommands(commandList);
+            graphicsDevice.WaitForIdle();
 
-            vertexShader = LoadShader(graphicsDevice, ShaderStages.Vertex);
-            fragmentShader = LoadShader(graphicsDevice, ShaderStages.Fragment);
+            var shaderSet = new ShaderSetDescription(
+                new[]
+                {
+                    new VertexLayoutDescription(
+                        new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
+                        new VertexElementDescription("Color", VertexElementSemantic.Color, VertexElementFormat.Float4))
+                },
+                new[]
+                {
+                    LoadShader(graphicsDevice, factory, ShaderStages.Vertex),
+                    LoadShader(graphicsDevice, factory, ShaderStages.Fragment)
+                });
 
-            GraphicsPipelineDescription pipelineDescription = new GraphicsPipelineDescription();
-            pipelineDescription.BlendState = BlendStateDescription.SingleOverrideBlend;
+            ResourceLayout mvpResourceLayout = factory.CreateResourceLayout(
+                new ResourceLayoutDescription(
+                    new ResourceLayoutElementDescription("MVP", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
 
-            pipelineDescription.DepthStencilState = new DepthStencilStateDescription(
-                depthTestEnabled: true,
-                depthWriteEnabled: true,
-                comparisonKind: ComparisonKind.LessEqual);
-
-            pipelineDescription.RasterizerState = new RasterizerStateDescription(
+            var rasterizeState =  new RasterizerStateDescription(
                 cullMode: FaceCullMode.Back,
                 fillMode: PolygonFillMode.Solid,
                 frontFace: FrontFace.CounterClockwise,
                 depthClipEnabled: true,
                 scissorTestEnabled: false);
 
-            pipelineDescription.PrimitiveTopology = PrimitiveTopology.TriangleStrip;
-            pipelineDescription.ResourceLayouts = System.Array.Empty<ResourceLayout>();
+            pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
+                BlendStateDescription.SingleOverrideBlend,
+                DepthStencilStateDescription.DepthOnlyLessEqual,
+                rasterizeState,
+                PrimitiveTopology.TriangleList,
+                shaderSet,
+                new[] { mvpResourceLayout },
+                graphicsDevice.SwapchainFramebuffer.OutputDescription));
 
-            pipelineDescription.ShaderSet = new ShaderSetDescription(
-                vertexLayouts: new VertexLayoutDescription[] { vertexLayout },
-                shaders: new Shader[] { vertexShader, fragmentShader });
-
-            pipelineDescription.Outputs = graphicsDevice.SwapchainFramebuffer.OutputDescription;
-            pipeline = factory.CreateGraphicsPipeline(pipelineDescription);
-
-            commandList = factory.CreateCommandList();
+            mvpResourceSet = factory.CreateResourceSet(new ResourceSetDescription(
+                mvpResourceLayout,
+                mvpBuffer));
         }
 
-        private static Shader LoadShader(GraphicsDevice graphicsDevice, ShaderStages stage)
+        private static Shader LoadShader(GraphicsDevice graphicsDevice, ResourceFactory factory, ShaderStages stage)
         {
             string extension = null;
             switch (graphicsDevice.BackendType)
@@ -110,23 +120,42 @@ namespace GraphicsTutorial
             string path = Path.Combine(System.AppContext.BaseDirectory, "Shaders", $"{stage.ToString()}.{extension}");
             byte[] shaderBytes = File.ReadAllBytes(path);
 
-            return graphicsDevice.ResourceFactory.CreateShader(new ShaderDescription(stage, shaderBytes, entryPoint));
+            return factory.CreateShader(new ShaderDescription(stage, shaderBytes, entryPoint));
         }
-        private static void Draw(GraphicsDevice graphicsDevice)
+        private static void Draw(GraphicsDevice graphicsDevice, Sdl2Window window)
         {
             // Begin() must be called before commands can be issued.
             commandList.Begin();
+
+            var projection = Matrix4x4.CreatePerspectiveFieldOfView(
+                Radians(45.0f),
+                (float)window.Width / window.Height,
+                0.1f,
+                100f);
+
+            var view = Matrix4x4.CreateLookAt(
+              new Vector3(4,3,3),
+              new Vector3(0,0,0),
+              new Vector3(0,1,0));
+
+            var model = Matrix4x4.Identity;
+            Matrix4x4 mvp = projection * view * model;
+
+            // identity matrix, model is at 0,0,0 location
+            commandList.UpdateBuffer(mvpBuffer, 0, mvp);
 
             // We want to render directly to the output window.
             commandList.SetFramebuffer(graphicsDevice.SwapchainFramebuffer);
             commandList.SetFullViewports();
             commandList.ClearColorTarget(0, RgbaFloat.Black);
 
-            // Set all relevant state to draw our quad.
+            // Set all relevant state to draw our triangle.
+            commandList.SetPipeline(pipeline);
             commandList.SetVertexBuffer(0, vertexBuffer);
             commandList.SetIndexBuffer(indexBuffer, IndexFormat.UInt16);
-            commandList.SetPipeline(pipeline);
-            // Issue a Draw command for a single instance with 4 indices.
+            commandList.SetGraphicsResourceSet(0, mvpResourceSet);
+
+            // Issue a Draw command for a single instance with 3 indices.
             commandList.DrawIndexed(
                 indexCount: 3,
                 instanceCount: 1,
@@ -142,15 +171,10 @@ namespace GraphicsTutorial
             graphicsDevice.SwapBuffers();
         }
 
-        private static void DisposeResources(GraphicsDevice graphicsDevice)
+        public static float Radians(float degrees)
         {
-            pipeline.Dispose();
-            vertexShader.Dispose();
-            fragmentShader.Dispose();
-            commandList.Dispose();
-            vertexBuffer.Dispose();
-            indexBuffer.Dispose();
-            graphicsDevice.Dispose();
+            float radians = ((float)Math.PI / 180) * degrees;
+            return (radians);
         }
     }
 }
