@@ -218,9 +218,9 @@ namespace GraphicsTutorial
             commandList.SetIndexBuffer(indexBuffer, IndexFormat.UInt16);
             commandList.SetGraphicsResourceSet(0, mvpResourceSet);
 
-            // Issue a Draw command for a single instance with 3 indices.
+            // Issue a Draw command for a single instance with 12 * 3 (6 faced with 2 triangles per face) indices.
             commandList.DrawIndexed(
-                indexCount: 3,
+                indexCount: 12 * 3,
                 instanceCount: 1,
                 indexStart: 0,
                 vertexOffset: 0,

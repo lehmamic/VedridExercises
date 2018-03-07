@@ -8,10 +8,10 @@ layout(std140) uniform MVP
     mat4 MvpMatrix;
 };
 
+out vec4 FragmentColor;
+
 void main()
 {
-    // mat4 MVP = Projection * View * Model;
     gl_Position = MvpMatrix * vec4(Position, 1);
-    //gl_Position.xyz = Position;
-    //gl_Position.w = 1.0;
+    FragmentColor = Color;
 }
