@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using Veldrid;
 using Veldrid.Sdl2;
@@ -32,7 +33,8 @@ namespace GraphicsTutorial
 
             GraphicsDeviceOptions options = new GraphicsDeviceOptions
             {
-                Debug = true
+                Debug = true,
+                SwapchainDepthFormat = PixelFormat.R16_UNorm
             };
 
             GraphicsDevice graphicsDevice = VeldridStartup.CreateGraphicsDevice(window, options, GraphicsBackend.OpenGL);
@@ -52,19 +54,16 @@ namespace GraphicsTutorial
             commandList = factory.CreateCommandList();
             commandList.Begin();
 
-            var triangleVertices = new[]
-            {
-                new VertexPositionColor(new Vector3(-.75f, -.75f, 0f), RgbaFloat.Red),
-                new VertexPositionColor(new Vector3(.75f, -.75f, 0f), RgbaFloat.Green),
-                new VertexPositionColor(new Vector3(0f, .75f, 0f), RgbaFloat.Blue),
-            };
+            var cubeVertices = GetCubeVertices();
 
-            ushort[] triangleIndices = { 0, 1, 2 };
+            ushort[] triangleIndices = Enumerable.Range(0, 12 * 3)
+                .Select(i => (ushort)i)
+                .ToArray();
 
-            vertexBuffer = factory.CreateBuffer(new BufferDescription(3 * VertexPositionColor.SizeInBytes, BufferUsage.VertexBuffer));
-            commandList.UpdateBuffer(vertexBuffer, 0, triangleVertices);
+            vertexBuffer = factory.CreateBuffer(new BufferDescription(12 * 3 * VertexPositionColor.SizeInBytes, BufferUsage.VertexBuffer));
+            commandList.UpdateBuffer(vertexBuffer, 0, cubeVertices);
 
-            indexBuffer = factory.CreateBuffer(new BufferDescription(3 * sizeof(ushort), BufferUsage.IndexBuffer));
+            indexBuffer = factory.CreateBuffer(new BufferDescription(12 * 3 * sizeof(ushort), BufferUsage.IndexBuffer));
             commandList.UpdateBuffer(indexBuffer, 0, triangleIndices);
 
             mvpBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
@@ -91,7 +90,7 @@ namespace GraphicsTutorial
                     new ResourceLayoutElementDescription("MVP", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
 
             var rasterizeState =  new RasterizerStateDescription(
-                cullMode: FaceCullMode.Back,
+                cullMode: FaceCullMode.None,
                 fillMode: PolygonFillMode.Solid,
                 frontFace: FrontFace.CounterClockwise,
                 depthClipEnabled: true,
@@ -99,7 +98,7 @@ namespace GraphicsTutorial
 
             pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
-                DepthStencilStateDescription.Disabled,
+                DepthStencilStateDescription.DepthOnlyLessEqual,
                 rasterizeState,
                 PrimitiveTopology.TriangleList,
                 shaderSet,
@@ -109,6 +108,62 @@ namespace GraphicsTutorial
             mvpResourceSet = factory.CreateResourceSet(new ResourceSetDescription(
                 mvpResourceLayout,
                 mvpBuffer));
+        }
+
+        private static VertexPositionColor[] GetCubeVertices()
+        {
+            var vertices = new VertexPositionColor[]
+            {
+                new VertexPositionColor(new Vector3(-0.5f,-0.5f,-0.5f), new RgbaFloat(0.583f, 0.771f, 0.014f, 1f)),
+                new VertexPositionColor(new Vector3(-0.5f,-0.5f, 0.5f), new RgbaFloat(0.609f, 0.115f, 0.436f, 1f)),
+                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 0.5f), new RgbaFloat(0.327f, 0.483f, 0.844f, 1f)),
+
+                new VertexPositionColor(new Vector3(0.5f, 0.5f,-0.5f), new RgbaFloat(0.822f, 0.569f, 0.201f, 1f)),
+                new VertexPositionColor(new Vector3(-0.5f,-0.5f,-0.5f), new RgbaFloat(0.435f, 0.602f, 0.223f, 1f)),
+                new VertexPositionColor(new Vector3(-0.5f, 0.5f,-0.5f), new RgbaFloat(0.310f, 0.747f, 0.185f, 1f)),
+
+                new VertexPositionColor(new Vector3(0.5f,-0.5f, 0.5f), new RgbaFloat(0.597f, 0.770f, 0.761f, 1f)),
+                new VertexPositionColor(new Vector3(-0.5f,-0.5f,-0.5f), new RgbaFloat(0.559f, 0.436f, 0.730f, 1f)),
+                new VertexPositionColor(new Vector3(0.5f,-0.5f,-0.5f), new RgbaFloat(0.359f, 0.583f, 0.152f, 1f)),
+
+                new VertexPositionColor(new Vector3(0.5f, 0.5f,-0.5f), new RgbaFloat(0.483f, 0.596f, 0.789f, 1f)),
+                new VertexPositionColor(new Vector3(0.5f,-0.5f,-0.5f), new RgbaFloat(0.559f, 0.861f, 0.639f, 1f)),
+                new VertexPositionColor(new Vector3(-0.5f,-0.5f,-0.5f), new RgbaFloat(0.195f, 0.548f, 0.859f, 1f)),
+
+                new VertexPositionColor(new Vector3(-0.5f,-0.5f,-0.5f), new RgbaFloat(0.014f, 0.184f, 0.576f, 1f)),
+                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 0.5f), new RgbaFloat(0.771f, 0.328f, 0.970f, 1f)),
+                new VertexPositionColor(new Vector3(-0.5f, 0.5f,-0.5f), new RgbaFloat(0.406f, 0.615f, 0.116f, 1f)),
+
+                new VertexPositionColor(new Vector3(0.5f,-0.5f, 0.5f), new RgbaFloat(0.676f, 0.977f, 0.133f, 1f)),
+                new VertexPositionColor(new Vector3(-0.5f,-0.5f, 0.5f), new RgbaFloat(0.971f, 0.572f, 0.833f, 1f)),
+                new VertexPositionColor(new Vector3(-0.5f,-0.5f,-0.5f), new RgbaFloat(0.140f, 0.616f, 0.489f, 1f)),
+
+                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 0.5f), new RgbaFloat(0.997f, 0.513f, 0.064f, 1f)),
+                new VertexPositionColor(new Vector3(-0.5f,-0.5f, 0.5f), new RgbaFloat(0.945f, 0.719f, 0.592f, 1f)),
+                new VertexPositionColor(new Vector3(0.5f,-0.5f, 0.5f), new RgbaFloat(0.543f, 0.021f, 0.978f, 1f)),
+
+                new VertexPositionColor(new Vector3(0.5f, 0.5f, 0.5f), new RgbaFloat(0.279f, 0.317f, 0.505f, 1f)),
+                new VertexPositionColor(new Vector3(0.5f,-0.5f,-0.5f), new RgbaFloat(0.167f, 0.620f, 0.077f, 1f)),
+                new VertexPositionColor(new Vector3(0.5f, 0.5f,-0.5f), new RgbaFloat(0.347f, 0.857f, 0.137f, 1f)),
+
+                new VertexPositionColor(new Vector3(0.5f,-0.5f,-0.5f), new RgbaFloat(0.055f, 0.953f, 0.042f, 1f)),
+                new VertexPositionColor(new Vector3(0.5f, 0.5f, 0.5f), new RgbaFloat(0.714f, 0.505f, 0.345f, 1f)),
+                new VertexPositionColor(new Vector3(0.5f,-0.5f, 0.5f), new RgbaFloat(0.783f, 0.290f, 0.734f, 1f)),
+
+                new VertexPositionColor(new Vector3(0.5f, 0.5f, 0.5f), new RgbaFloat(0.722f, 0.645f, 0.174f, 1f)),
+                new VertexPositionColor(new Vector3(0.5f, 0.5f,-0.5f), new RgbaFloat(0.302f, 0.455f, 0.848f, 1f)),
+                new VertexPositionColor(new Vector3(-0.5f, 0.5f,-0.5f), new RgbaFloat(0.225f, 0.587f, 0.040f, 1f)),
+
+                new VertexPositionColor(new Vector3(0.5f, 0.5f, 0.5f), new RgbaFloat(0.517f, 0.713f, 0.338f, 1f)),
+                new VertexPositionColor(new Vector3(-0.5f, 0.5f,-0.5f), new RgbaFloat(0.053f, 0.959f, 0.120f, 1f)),
+                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 0.5f), new RgbaFloat(0.393f, 0.621f, 0.362f, 1f)),
+
+                new VertexPositionColor(new Vector3(0.5f, 0.5f, 0.5f), new RgbaFloat(0.673f, 0.211f, 0.457f, 1f)),
+                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 0.5f), new RgbaFloat(0.820f, 0.883f, 0.371f, 1f)),
+                new VertexPositionColor(new Vector3(0.5f,-0.5f, 0.5f), new RgbaFloat(0.982f, 0.099f, 0.879f, 1f))
+            };
+
+            return vertices;
         }
 
         private static Shader LoadShader(GraphicsDevice graphicsDevice, ResourceFactory factory, ShaderStages stage)
@@ -141,9 +196,9 @@ namespace GraphicsTutorial
                 100f);
 
             var view = Matrix4x4.CreateLookAt(
-              new Vector3(4,3,3),
-              new Vector3(0,0,0),
-              new Vector3(0,1,0));
+              new Vector3(4, 3, 3),
+              new Vector3(0, 0, 0),
+              new Vector3(0, 1, 0));
 
             var model = Matrix4x4.Identity;
             Matrix4x4 mvp = model * view * projection;
@@ -155,6 +210,7 @@ namespace GraphicsTutorial
             commandList.SetFramebuffer(graphicsDevice.SwapchainFramebuffer);
             commandList.SetFullViewports();
             commandList.ClearColorTarget(0, RgbaFloat.Black);
+            commandList.ClearDepthStencil(1f);
 
             // Set all relevant state to draw our triangle.
             commandList.SetPipeline(pipeline);
