@@ -128,6 +128,7 @@ namespace GraphicsTutorial
 
             return factory.CreateShader(new ShaderDescription(stage, shaderBytes, entryPoint));
         }
+
         private static void Draw(GraphicsDevice graphicsDevice, Sdl2Window window)
         {
             // Begin() must be called before commands can be issued.
