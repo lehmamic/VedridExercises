@@ -29,7 +29,13 @@ namespace GraphicsTutorial
             };
 
             Sdl2Window window = VeldridStartup.CreateWindow(ref windowCI);
-            GraphicsDevice graphicsDevice = VeldridStartup.CreateGraphicsDevice(window, GraphicsBackend.OpenGL);
+
+            GraphicsDeviceOptions options = new GraphicsDeviceOptions
+            {
+                Debug = true
+            };
+
+            GraphicsDevice graphicsDevice = VeldridStartup.CreateGraphicsDevice(window, options, GraphicsBackend.OpenGL);
 
             var factory = new DisposeCollectorResourceFactory(graphicsDevice.ResourceFactory);
             CreateResources(graphicsDevice, factory);
@@ -93,7 +99,7 @@ namespace GraphicsTutorial
 
             pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
-                DepthStencilStateDescription.DepthOnlyLessEqual,
+                DepthStencilStateDescription.Disabled,
                 rasterizeState,
                 PrimitiveTopology.TriangleList,
                 shaderSet,
@@ -132,6 +138,17 @@ namespace GraphicsTutorial
                 (float)window.Width / window.Height,
                 0.1f,
                 100f);
+            // var projection = Matrix4x4.CreatePerspectiveFieldOfView(
+            //     1.0f,
+            //     (float)window.Width / window.Height,
+            //     0.5f,
+            //     100f);
+            // var projection = new Matrix4x4(
+            //   1.81066012f, 0f, 0f, 0f,
+            //   0f, 2.41421342f, 0f, 0f,
+            //   0f, 0f, -1.002002f, -1f,
+            //   0f, 0f, -0.2002002f, 0f
+            // );
 
             var view = Matrix4x4.CreateLookAt(
               new Vector3(4,3,3),
@@ -139,7 +156,7 @@ namespace GraphicsTutorial
               new Vector3(0,1,0));
 
             var model = Matrix4x4.Identity;
-            Matrix4x4 mvp = projection * view * model;
+            Matrix4x4 mvp = model * view * projection;
 
             // identity matrix, model is at 0,0,0 location
             commandList.UpdateBuffer(mvpBuffer, 0, mvp);
