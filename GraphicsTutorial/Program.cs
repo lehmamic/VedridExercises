@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using Veldrid;
+using Veldrid.ImageSharp;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
 using Veldrid.Utilities;
@@ -55,16 +56,18 @@ namespace GraphicsTutorial
             commandList.Begin();
 
             var cubeVertices = GetCubeVertices();
+            vertexBuffer = factory.CreateBuffer(new BufferDescription(12 * 3 * VertexPositionColor.SizeInBytes, BufferUsage.VertexBuffer));
+            commandList.UpdateBuffer(vertexBuffer, 0, cubeVertices);
 
             ushort[] triangleIndices = Enumerable.Range(0, 12 * 3)
                 .Select(i => (ushort)i)
                 .ToArray();
-
-            vertexBuffer = factory.CreateBuffer(new BufferDescription(12 * 3 * VertexPositionColor.SizeInBytes, BufferUsage.VertexBuffer));
-            commandList.UpdateBuffer(vertexBuffer, 0, cubeVertices);
-
             indexBuffer = factory.CreateBuffer(new BufferDescription(12 * 3 * sizeof(ushort), BufferUsage.IndexBuffer));
             commandList.UpdateBuffer(indexBuffer, 0, triangleIndices);
+
+            var textureImage = new ImageSharpTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "uvtemplate.png"));
+            Texture surfaceTexture = textureImage.CreateDeviceTexture(graphicsDevice, factory);
+            TextureView surfaceTextureView = factory.CreateTextureView(surfaceTexture);
 
             mvpBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
 
