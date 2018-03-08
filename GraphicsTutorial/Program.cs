@@ -14,9 +14,12 @@ namespace GraphicsTutorial
         private static CommandList commandList;
         private static DeviceBuffer vertexBuffer;
         private static DeviceBuffer indexBuffer;
-        private static DeviceBuffer mvpBuffer;
+        private static DeviceBuffer projectionBuffer;
+        private static DeviceBuffer viewBuffer;
+        private static DeviceBuffer modelBuffer;
         private static Pipeline pipeline;
-        private static ResourceSet mvpResourceSet;
+        private static ResourceSet projectionViewResourceSet;
+        private static ResourceSet modelTextureResourceSet;
 
         static void Main(string[] args)
         {
@@ -54,19 +57,19 @@ namespace GraphicsTutorial
             commandList = factory.CreateCommandList();
             commandList.Begin();
 
+            projectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
+            viewBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
+            modelBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
+
             var cubeVertices = GetCubeVertices();
+            vertexBuffer = factory.CreateBuffer(new BufferDescription(12 * 3 * VertexPositionColor.SizeInBytes, BufferUsage.VertexBuffer));
+            commandList.UpdateBuffer(vertexBuffer, 0, cubeVertices);
 
             ushort[] triangleIndices = Enumerable.Range(0, 12 * 3)
                 .Select(i => (ushort)i)
                 .ToArray();
-
-            vertexBuffer = factory.CreateBuffer(new BufferDescription(12 * 3 * VertexPositionColor.SizeInBytes, BufferUsage.VertexBuffer));
-            commandList.UpdateBuffer(vertexBuffer, 0, cubeVertices);
-
             indexBuffer = factory.CreateBuffer(new BufferDescription(12 * 3 * sizeof(ushort), BufferUsage.IndexBuffer));
             commandList.UpdateBuffer(indexBuffer, 0, triangleIndices);
-
-            mvpBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
 
             commandList.End();
             graphicsDevice.SubmitCommands(commandList);
@@ -85,9 +88,14 @@ namespace GraphicsTutorial
                     LoadShader(graphicsDevice, factory, ShaderStages.Fragment)
                 });
 
-            ResourceLayout mvpResourceLayout = factory.CreateResourceLayout(
+            ResourceLayout projectionViewLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
-                    new ResourceLayoutElementDescription("MVP", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
+                    new ResourceLayoutElementDescription("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+                    new ResourceLayoutElementDescription("View", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
+
+            ResourceLayout modelTextureLayout = factory.CreateResourceLayout(
+                new ResourceLayoutDescription(
+                    new ResourceLayoutElementDescription("Model", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
 
             var rasterizeState =  new RasterizerStateDescription(
                 cullMode: FaceCullMode.None,
@@ -102,12 +110,17 @@ namespace GraphicsTutorial
                 rasterizeState,
                 PrimitiveTopology.TriangleList,
                 shaderSet,
-                new[] { mvpResourceLayout },
+                new[] { projectionViewLayout, modelTextureLayout },
                 graphicsDevice.SwapchainFramebuffer.OutputDescription));
 
-            mvpResourceSet = factory.CreateResourceSet(new ResourceSetDescription(
-                mvpResourceLayout,
-                mvpBuffer));
+            projectionViewResourceSet = factory.CreateResourceSet(new ResourceSetDescription(
+                projectionViewLayout,
+                projectionBuffer,
+                viewBuffer));
+
+            modelTextureResourceSet = factory.CreateResourceSet(new ResourceSetDescription(
+                modelTextureLayout,
+                modelBuffer));
         }
 
         private static VertexPositionColor[] GetCubeVertices()
@@ -194,17 +207,17 @@ namespace GraphicsTutorial
                 (float)window.Width / window.Height,
                 0.1f,
                 100f);
+            commandList.UpdateBuffer(projectionBuffer, 0, projection);
 
             var view = Matrix4x4.CreateLookAt(
               new Vector3(4, 3, 3),
               new Vector3(0, 0, 0),
               new Vector3(0, 1, 0));
-
-            var model = Matrix4x4.Identity;
-            Matrix4x4 mvp = model * view * projection;
+            commandList.UpdateBuffer(viewBuffer, 0, view);
 
             // identity matrix, model is at 0,0,0 location
-            commandList.UpdateBuffer(mvpBuffer, 0, mvp);
+            var model = Matrix4x4.Identity;
+            commandList.UpdateBuffer(modelBuffer, 0, model);
 
             // We want to render directly to the output window.
             commandList.SetFramebuffer(graphicsDevice.SwapchainFramebuffer);
@@ -216,7 +229,8 @@ namespace GraphicsTutorial
             commandList.SetPipeline(pipeline);
             commandList.SetVertexBuffer(0, vertexBuffer);
             commandList.SetIndexBuffer(indexBuffer, IndexFormat.UInt16);
-            commandList.SetGraphicsResourceSet(0, mvpResourceSet);
+            commandList.SetGraphicsResourceSet(0, projectionViewResourceSet);
+            commandList.SetGraphicsResourceSet(0, modelTextureResourceSet);
 
             // Issue a Draw command for a single instance with 12 * 3 (6 faced with 2 triangles per face) indices.
             commandList.DrawIndexed(
