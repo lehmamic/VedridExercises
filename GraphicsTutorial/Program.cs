@@ -230,7 +230,7 @@ namespace GraphicsTutorial
             commandList.SetVertexBuffer(0, vertexBuffer);
             commandList.SetIndexBuffer(indexBuffer, IndexFormat.UInt16);
             commandList.SetGraphicsResourceSet(0, projectionViewResourceSet);
-            commandList.SetGraphicsResourceSet(0, modelTextureResourceSet);
+            commandList.SetGraphicsResourceSet(1, modelTextureResourceSet);
 
             // Issue a Draw command for a single instance with 12 * 3 (6 faced with 2 triangles per face) indices.
             commandList.DrawIndexed(
