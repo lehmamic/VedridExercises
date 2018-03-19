@@ -65,13 +65,11 @@ namespace GraphicsTutorial
 
             var objFile = ReadModel("cube.obj");
             mesh = objFile.GetFirstMesh();
-            var vertices = mesh.Vertices.Select(v =>  new VertexPositionTexture(v.Position, v.TextureCoordinates))
-              .ToArray();
 
-            vertexBuffer = factory.CreateBuffer(new BufferDescription(12 * 3 * VertexPositionTexture.SizeInBytes, BufferUsage.VertexBuffer));
-            commandList.UpdateBuffer(vertexBuffer, 0, vertices);
+            vertexBuffer = factory.CreateBuffer(new BufferDescription((uint)mesh.Vertices.Length * VertexPositionNormalTexture.SizeInBytes, BufferUsage.VertexBuffer));
+            commandList.UpdateBuffer(vertexBuffer, 0, mesh.Vertices);
 
-            indexBuffer = factory.CreateBuffer(new BufferDescription(12 * 3 * sizeof(ushort), BufferUsage.IndexBuffer));
+            indexBuffer = factory.CreateBuffer(new BufferDescription((uint)mesh.Indices.Length * sizeof(ushort), BufferUsage.IndexBuffer));
             commandList.UpdateBuffer(indexBuffer, 0, mesh.Indices);
 
             var stoneImage = new PfimTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "uvmap.DDS"));
@@ -87,6 +85,7 @@ namespace GraphicsTutorial
                 {
                     new VertexLayoutDescription(
                         new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
+                        new VertexElementDescription("Normal", VertexElementSemantic.Normal, VertexElementFormat.Float3),
                         new VertexElementDescription("TextureCoordinate", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
                 },
                 new[]

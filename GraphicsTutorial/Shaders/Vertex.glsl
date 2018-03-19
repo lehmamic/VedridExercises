@@ -1,6 +1,7 @@
 #version 330 core
 
 in vec3 Position;
+in vec3 Normal;
 in vec2 TextureCoordinate;
 
 layout(std140) uniform Projection
