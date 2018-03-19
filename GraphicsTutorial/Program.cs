@@ -18,6 +18,7 @@ namespace GraphicsTutorial
         private static DeviceBuffer projectionBuffer;
         private static DeviceBuffer viewBuffer;
         private static DeviceBuffer modelBuffer;
+        private static DeviceBuffer lightPositionBuffer;
         private static Pipeline pipeline;
         private static ResourceSet projectionViewResourceSet;
         private static ResourceSet modelTextureResourceSet;
@@ -62,6 +63,7 @@ namespace GraphicsTutorial
             projectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
             viewBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
             modelBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
+            lightPositionBuffer = factory.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
 
             var objFile = ReadModel("cube.obj");
             mesh = objFile.GetFirstMesh();
@@ -97,7 +99,8 @@ namespace GraphicsTutorial
             ResourceLayout projectionViewLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
                     new ResourceLayoutElementDescription("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex),
-                    new ResourceLayoutElementDescription("View", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
+                    new ResourceLayoutElementDescription("View", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+                    new ResourceLayoutElementDescription("LightPosition", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment)));
 
             ResourceLayout modelTextureLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
@@ -124,7 +127,8 @@ namespace GraphicsTutorial
             projectionViewResourceSet = factory.CreateResourceSet(new ResourceSetDescription(
                 projectionViewLayout,
                 projectionBuffer,
-                viewBuffer));
+                viewBuffer,
+                lightPositionBuffer));
 
             modelTextureResourceSet = factory.CreateResourceSet(new ResourceSetDescription(
                 modelTextureLayout,
@@ -237,6 +241,9 @@ namespace GraphicsTutorial
             // identity matrix, model is at 0,0,0 location
             var model = Matrix4x4.Identity;
             commandList.UpdateBuffer(modelBuffer, 0, model);
+
+            var lightPosition = new Vector3(4, 4, 4);
+            commandList.UpdateBuffer(lightPositionBuffer, 0, lightPosition);
 
             // We want to render directly to the output window.
             commandList.SetFramebuffer(graphicsDevice.SwapchainFramebuffer);
