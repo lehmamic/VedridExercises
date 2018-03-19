@@ -21,5 +21,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Textures\%(RecursiveDir)\%(FileName)%(Extension)</Link>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Models\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Models\%(RecursiveDir)\%(FileName)%(Extension)</Link>
+    </Content>
   </ItemGroup>
 </Project>

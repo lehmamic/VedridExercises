@@ -21,6 +21,7 @@ namespace GraphicsTutorial
         private static Pipeline pipeline;
         private static ResourceSet projectionViewResourceSet;
         private static ResourceSet modelTextureResourceSet;
+        private static ConstructedMeshInfo mesh;
 
         static void Main(string[] args)
         {
@@ -62,15 +63,16 @@ namespace GraphicsTutorial
             viewBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
             modelBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
 
-            VertexPositionTexture[] cubeVertices = GetCubeVertices();
-            vertexBuffer = factory.CreateBuffer(new BufferDescription(12 * 3 * VertexPositionTexture.SizeInBytes, BufferUsage.VertexBuffer));
-            commandList.UpdateBuffer(vertexBuffer, 0, cubeVertices);
+            var objFile = ReadModel("cube.obj");
+            mesh = objFile.GetFirstMesh();
+            var vertices = mesh.Vertices.Select(v =>  new VertexPositionTexture(v.Position, v.TextureCoordinates))
+              .ToArray();
 
-            ushort[] triangleIndices = Enumerable.Range(0, 12 * 3)
-                .Select(i => (ushort)i)
-                .ToArray();
+            vertexBuffer = factory.CreateBuffer(new BufferDescription(12 * 3 * VertexPositionTexture.SizeInBytes, BufferUsage.VertexBuffer));
+            commandList.UpdateBuffer(vertexBuffer, 0, vertices);
+
             indexBuffer = factory.CreateBuffer(new BufferDescription(12 * 3 * sizeof(ushort), BufferUsage.IndexBuffer));
-            commandList.UpdateBuffer(indexBuffer, 0, triangleIndices);
+            commandList.UpdateBuffer(indexBuffer, 0, mesh.Indices);
 
             ImageSharpTexture stoneImage = new ImageSharpTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "uvtemplate.png"));
             Texture surfaceTexture = stoneImage.CreateDeviceTexture(graphicsDevice, factory);
@@ -130,6 +132,15 @@ namespace GraphicsTutorial
                 modelBuffer,
                 surfaceTextureView,
                 graphicsDevice.Aniso4xSampler));
+        }
+
+        private static ObjFile ReadModel(string filename)
+        {
+            var parser = new ObjParser();
+            using(var stream = File.OpenRead(Path.Combine(System.AppContext.BaseDirectory, "Models", filename)))
+            {
+                return parser.Parse(stream);
+            }
         }
 
         private static VertexPositionTexture[] GetCubeVertices()
@@ -243,7 +254,7 @@ namespace GraphicsTutorial
 
             // Issue a Draw command for a single instance with 12 * 3 (6 faced with 2 triangles per face) indices.
             commandList.DrawIndexed(
-                indexCount: 12 * 3,
+                indexCount: (uint)mesh.Indices.Length,
                 instanceCount: 1,
                 indexStart: 0,
                 vertexOffset: 0,
