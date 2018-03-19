@@ -74,7 +74,7 @@ namespace GraphicsTutorial
             indexBuffer = factory.CreateBuffer(new BufferDescription(12 * 3 * sizeof(ushort), BufferUsage.IndexBuffer));
             commandList.UpdateBuffer(indexBuffer, 0, mesh.Indices);
 
-            ImageSharpTexture stoneImage = new ImageSharpTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "uvtemplate.png"));
+            var stoneImage = new PfimTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "uvmap.DDS"));
             Texture surfaceTexture = stoneImage.CreateDeviceTexture(graphicsDevice, factory);
             TextureView surfaceTextureView = factory.CreateTextureView(surfaceTexture);
 
