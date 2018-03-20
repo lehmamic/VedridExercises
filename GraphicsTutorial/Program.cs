@@ -65,7 +65,7 @@ namespace GraphicsTutorial
             modelBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
             lightPositionBuffer = factory.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
 
-            var objFile = ReadModel("cube.obj");
+            var objFile = ReadModel("suzanne.obj");
             mesh = objFile.GetFirstMesh();
 
             vertexBuffer = factory.CreateBuffer(new BufferDescription((uint)mesh.Vertices.Length * VertexPositionNormalTexture.SizeInBytes, BufferUsage.VertexBuffer));
@@ -74,7 +74,7 @@ namespace GraphicsTutorial
             indexBuffer = factory.CreateBuffer(new BufferDescription((uint)mesh.Indices.Length * sizeof(ushort), BufferUsage.IndexBuffer));
             commandList.UpdateBuffer(indexBuffer, 0, mesh.Indices);
 
-            var stoneImage = new PfimTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "uvmap.DDS"));
+            var stoneImage = new ImageSharpTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "uvmap.png"));
             Texture surfaceTexture = stoneImage.CreateDeviceTexture(graphicsDevice, factory);
             TextureView surfaceTextureView = factory.CreateTextureView(surfaceTexture);
 
