@@ -14,7 +14,7 @@ layout(std140) uniform LightPosition
 
 uniform sampler2D SurfaceTexture;
 
-out vec3 Color;
+out vec4 Color;
 
 void main()
 {
@@ -52,11 +52,13 @@ void main()
     //  - Looking elsewhere -> < 1
     float cosAlpha = clamp(dot(E, R), 0, 1);
 
-    Color =
+    Color.rgb =
       // Ambient : simulates indirect lighting
       MaterialAmbientColor +
       // Diffuse : "color" of the object
       MaterialDiffuseColor * LightColor * LightPower * cosTheta / (distance * distance) +
       // Specular : reflective highlight, like a mirror
       MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha, 5) / (distance * distance);
+
+    Color.a = 0.3;
 }

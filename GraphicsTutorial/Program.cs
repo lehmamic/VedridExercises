@@ -116,7 +116,7 @@ namespace GraphicsTutorial
                 scissorTestEnabled: false);
 
             pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
-                BlendStateDescription.SingleOverrideBlend,
+                BlendStateDescription.SingleAlphaBlend,
                 DepthStencilStateDescription.DepthOnlyLessEqual,
                 rasterizeState,
                 PrimitiveTopology.TriangleList,
