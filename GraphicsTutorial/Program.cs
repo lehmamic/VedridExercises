@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -24,6 +26,9 @@ namespace GraphicsTutorial
         private static ResourceSet modelTextureResourceSet;
         private static ConstructedMeshInfo mesh;
 
+        private static Pipeline fontPipeline;
+        private static ResourceSet fontTextureResourceSet;
+
         static void Main(string[] args)
         {
             var windowCI = new WindowCreateInfo()
@@ -48,10 +53,12 @@ namespace GraphicsTutorial
             var factory = new DisposeCollectorResourceFactory(graphicsDevice.ResourceFactory);
             CreateResources(graphicsDevice, factory);
 
+            var stopwatch = Stopwatch.StartNew();
+
             while (window.Exists)
             {
                 window.PumpEvents();
-                Draw(graphicsDevice, window);
+                Draw(graphicsDevice, window, factory, stopwatch.ElapsedTicks * (1000 / Stopwatch.Frequency));
             }
         }
 
@@ -74,8 +81,8 @@ namespace GraphicsTutorial
             indexBuffer = factory.CreateBuffer(new BufferDescription((uint)mesh.Indices.Length * sizeof(ushort), BufferUsage.IndexBuffer));
             commandList.UpdateBuffer(indexBuffer, 0, mesh.Indices);
 
-            var stoneImage = new ImageSharpTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "uvmap.png"));
-            Texture surfaceTexture = stoneImage.CreateDeviceTexture(graphicsDevice, factory);
+            var image = new ImageSharpTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "uvmap.png"));
+            Texture surfaceTexture = image.CreateDeviceTexture(graphicsDevice, factory);
             TextureView surfaceTextureView = factory.CreateTextureView(surfaceTexture);
 
             commandList.End();
@@ -92,8 +99,8 @@ namespace GraphicsTutorial
                 },
                 new[]
                 {
-                    LoadShader(graphicsDevice, factory, ShaderStages.Vertex),
-                    LoadShader(graphicsDevice, factory, ShaderStages.Fragment)
+                    ShaderHelper.LoadShader(graphicsDevice, factory, "Standard", ShaderStages.Vertex),
+                    ShaderHelper.LoadShader(graphicsDevice, factory, "Standard", ShaderStages.Fragment)
                 });
 
             ResourceLayout projectionViewLayout = factory.CreateResourceLayout(
@@ -134,6 +141,54 @@ namespace GraphicsTutorial
                 modelTextureLayout,
                 modelBuffer,
                 surfaceTextureView,
+                graphicsDevice.Aniso4xSampler));
+
+            InitText2D(graphicsDevice, factory, "holstein.png");
+        }
+
+        private static void InitText2D(GraphicsDevice graphicsDevice, ResourceFactory factory, string texturePath)
+        {
+            var fontImage = new ImageSharpTexture(Path.Combine(AppContext.BaseDirectory, "Textures", texturePath));
+            Texture fontTexture = fontImage.CreateDeviceTexture(graphicsDevice, factory);
+            TextureView fontTextureView = factory.CreateTextureView(fontTexture);
+
+            var shaderSet = new ShaderSetDescription(
+                new[]
+                {
+                    new VertexLayoutDescription(
+                        new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
+                        new VertexElementDescription("TextureCoordinate", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
+                },
+                new[]
+                {
+                    ShaderHelper.LoadShader(graphicsDevice, factory, "2dText", ShaderStages.Vertex),
+                    ShaderHelper.LoadShader(graphicsDevice, factory, "2dText", ShaderStages.Fragment)
+                });
+
+            ResourceLayout fontTextureLayout = factory.CreateResourceLayout(
+                new ResourceLayoutDescription(
+                    new ResourceLayoutElementDescription("SurfaceTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
+                    new ResourceLayoutElementDescription("SurfaceSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
+
+            var rasterizeState =  new RasterizerStateDescription(
+                cullMode: FaceCullMode.None,
+                fillMode: PolygonFillMode.Solid,
+                frontFace: FrontFace.CounterClockwise,
+                depthClipEnabled: true,
+                scissorTestEnabled: false);
+
+            fontPipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
+                BlendStateDescription.SingleAlphaBlend,
+                DepthStencilStateDescription.Disabled,
+                rasterizeState,
+                PrimitiveTopology.TriangleList,
+                shaderSet,
+                new[] { fontTextureLayout },
+                graphicsDevice.SwapchainFramebuffer.OutputDescription));
+
+            fontTextureResourceSet = factory.CreateResourceSet(new ResourceSetDescription(
+                fontTextureLayout,
+                fontTextureView,
                 graphicsDevice.Aniso4xSampler));
         }
 
@@ -202,31 +257,13 @@ namespace GraphicsTutorial
             return vertices;
         }
 
-        private static Shader LoadShader(GraphicsDevice graphicsDevice, ResourceFactory factory, ShaderStages stage)
-        {
-            string extension = null;
-            switch (graphicsDevice.BackendType)
-            {
-                case GraphicsBackend.OpenGL:
-                    extension = "glsl";
-                    break;
-                default: throw new System.InvalidOperationException();
-            }
-
-            string entryPoint = stage == ShaderStages.Vertex ? "VS" : "FS";
-            string path = Path.Combine(System.AppContext.BaseDirectory, "Shaders", $"{stage.ToString()}.{extension}");
-            byte[] shaderBytes = File.ReadAllBytes(path);
-
-            return factory.CreateShader(new ShaderDescription(stage, shaderBytes, entryPoint));
-        }
-
-        private static void Draw(GraphicsDevice graphicsDevice, Sdl2Window window)
+        private static void Draw(GraphicsDevice graphicsDevice, Sdl2Window window, ResourceFactory factory, double time)
         {
             // Begin() must be called before commands can be issued.
             commandList.Begin();
 
             var projection = Matrix4x4.CreatePerspectiveFieldOfView(
-                Radians(45.0f),
+                MathUtils.Radians(45.0f),
                 (float)window.Width / window.Height,
                 0.1f,
                 100f);
@@ -270,14 +307,72 @@ namespace GraphicsTutorial
             commandList.End();
             graphicsDevice.SubmitCommands(commandList);
 
+            PrintText2D(graphicsDevice, factory, $"{time} milliseconds", 10, 500, 60);
+
             // Once commands have been submitted, the rendered image can be presented to the application window.
             graphicsDevice.SwapBuffers();
         }
 
-        public static float Radians(float degrees)
+        private static void PrintText2D(GraphicsDevice graphicsDevice, ResourceFactory factory, string text, int x, int y, int size)
         {
-            float radians = ((float)Math.PI / 180) * degrees;
-            return (radians);
+            var vertices = new List<FontVertex>();
+            for (int i = 0; i < text.Length; i++ )
+            {
+                var vertex_up_left    = new Vector2(x + i * size       , y + size);
+                var vertex_up_right   = new Vector2(x + i * size + size, y + size);
+                var vertex_down_right = new Vector2(x + i * size + size, y       );
+                var vertex_down_left  = new Vector2(x + i * size       , y       );
+
+                char character = text[i];
+                float uv_x = (character % 16) / 16.0f;
+                float uv_y = (character / 16) / 16.0f;
+
+                var uv_up_left    = new Vector2(uv_x               , uv_y);
+                var uv_up_right   = new Vector2(uv_x + 1.0f / 16.0f, uv_y);
+                var uv_down_right = new Vector2(uv_x + 1.0f / 16.0f, (uv_y + 1.0f / 16.0f));
+                var uv_down_left  = new Vector2(uv_x               , (uv_y + 1.0f / 16.0f));
+
+                vertices.Add(new FontVertex(vertex_up_left, uv_up_left));
+                vertices.Add(new FontVertex(vertex_down_left, uv_down_left));
+                vertices.Add(new FontVertex(vertex_up_right, uv_up_right));
+
+                vertices.Add(new FontVertex(vertex_down_right, uv_down_right));
+                vertices.Add(new FontVertex(vertex_up_right, uv_up_right));
+                vertices.Add(new FontVertex(vertex_down_left, uv_down_left));
+	          }
+
+            var indices = Enumerable.Range(0, vertices.Count).ToArray();
+
+            commandList.Begin();
+
+            var fontVertexBuffer = factory.CreateBuffer(new BufferDescription((uint)vertices.Count * FontVertex.SizeInBytes, BufferUsage.VertexBuffer));
+            commandList.UpdateBuffer(fontVertexBuffer, 0, vertices.ToArray());
+
+            var fontIndexBuffer = factory.CreateBuffer(new BufferDescription((uint)indices.Length * sizeof(ushort), BufferUsage.IndexBuffer));
+            commandList.UpdateBuffer(fontIndexBuffer, 0, indices);
+
+            // We want to render directly to the output window.
+            commandList.SetFramebuffer(graphicsDevice.SwapchainFramebuffer);
+            //commandList.SetFullViewports();
+            // commandList.ClearColorTarget(0, RgbaFloat.Black);
+            //commandList.ClearDepthStencil(1f);
+
+            // Set all relevant state to draw our triangle.
+            commandList.SetPipeline(fontPipeline);
+            commandList.SetVertexBuffer(0, fontVertexBuffer);
+            commandList.SetIndexBuffer(fontIndexBuffer, IndexFormat.UInt16);
+            commandList.SetGraphicsResourceSet(0, fontTextureResourceSet);
+
+            // Issue a Draw command for a single instance with 12 * 3 (6 faced with 2 triangles per face) indices.
+            commandList.DrawIndexed(
+                indexCount: (uint)indices.Length,
+                instanceCount: 1,
+                indexStart: 0,
+                vertexOffset: 0,
+                instanceStart: 0);
+
+            commandList.End();
+            graphicsDevice.SubmitCommands(commandList);
         }
     }
 }
