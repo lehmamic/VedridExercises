@@ -201,62 +201,6 @@ namespace GraphicsTutorial
             }
         }
 
-        private static VertexPositionTexture[] GetCubeVertices()
-        {
-            var vertices = new VertexPositionTexture[]
-            {
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f,-0.5f), new Vector2(0.000059f, 1.0f - 0.000004f)),
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f, 0.5f), new Vector2(0.000103f, 1.0f - 0.336048f)),
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f, 0.5f), new Vector2(0.335973f, 1.0f - 0.335903f)),
-
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f,-0.5f), new Vector2(1.000023f, 1.0f - 0.000013f)),
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f,-0.5f), new Vector2(0.667979f, 1.0f - 0.335851f)),
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f,-0.5f), new Vector2(0.999958f, 1.0f - 0.336064f)),
-
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f, 0.5f), new Vector2(0.667979f, 1.0f - 0.335851f)),
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f,-0.5f), new Vector2(0.336024f, 1.0f - 0.671877f)),
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f,-0.5f), new Vector2(0.667969f, 1.0f - 0.671889f)),
-
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f,-0.5f), new Vector2(1.000023f, 1.0f - 0.000013f)),
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f,-0.5f), new Vector2(0.668104f, 1.0f - 0.000013f)),
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f,-0.5f), new Vector2(0.667979f, 1.0f - 0.335851f)),
-
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f,-0.5f), new Vector2(0.000059f, 1.0f - 0.000004f)),
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f, 0.5f), new Vector2(0.335973f, 1.0f - 0.335903f)),
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f,-0.5f), new Vector2(0.336098f, 1.0f - 0.000071f)),
-
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f, 0.5f), new Vector2(0.667979f, 1.0f - 0.335851f)),
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f, 0.5f), new Vector2(0.335973f, 1.0f - 0.335903f)),
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f,-0.5f), new Vector2(0.336024f, 1.0f - 0.671877f)),
-
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f, 0.5f), new Vector2(1.000004f, 1.0f - 0.671847f)),
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f, 0.5f), new Vector2(0.999958f, 1.0f - 0.336064f)),
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f, 0.5f), new Vector2(0.667979f, 1.0f - 0.335851f)),
-
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f, 0.5f), new Vector2(0.668104f, 1.0f - 0.000013f)),
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f,-0.5f), new Vector2(0.335973f, 1.0f - 0.335903f)),
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f,-0.5f), new Vector2(0.667979f, 1.0f - 0.335851f)),
-
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f,-0.5f), new Vector2(0.335973f, 1.0f - 0.335903f)),
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f, 0.5f), new Vector2(0.668104f, 1.0f - 0.000013f)),
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f, 0.5f), new Vector2(0.336098f, 1.0f - 0.000071f)),
-
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f, 0.5f), new Vector2(0.000103f, 1.0f - 0.336048f)),
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f,-0.5f), new Vector2(0.000004f, 1.0f - 0.671870f)),
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f,-0.5f), new Vector2(00.336024f, 1.0f - 0.671877f)),
-
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f, 0.5f), new Vector2(0.000103f, 1.0f - 0.336048f)),
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f,-0.5f), new Vector2(0.336024f, 1.0f - 0.671877f)),
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f, 0.5f), new Vector2(0.335973f, 1.0f - 0.335903f)),
-
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f, 0.5f), new Vector2(0.667969f, 1.0f - 0.671889f)),
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f, 0.5f), new Vector2(1.000004f, 1.0f - 0.671847f)),
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f, 0.5f), new Vector2(0.667979f, 1.0f - 0.335851f))
-            };
-
-            return vertices;
-        }
-
         private static void Draw(GraphicsDevice graphicsDevice, Sdl2Window window, ResourceFactory factory, double time)
         {
             // Begin() must be called before commands can be issued.
@@ -303,11 +247,11 @@ namespace GraphicsTutorial
                 vertexOffset: 0,
                 instanceStart: 0);
 
+            PrintText2D(graphicsDevice, factory, $"{time} milliseconds", 10, 500, 60);
+
             // End() must be called before commands can be submitted for execution.
             commandList.End();
             graphicsDevice.SubmitCommands(commandList);
-
-            PrintText2D(graphicsDevice, factory, $"{time} milliseconds", 10, 500, 60);
 
             // Once commands have been submitted, the rendered image can be presented to the application window.
             graphicsDevice.SwapBuffers();
@@ -339,11 +283,9 @@ namespace GraphicsTutorial
                 vertices.Add(new FontVertex(vertex_down_right, uv_down_right));
                 vertices.Add(new FontVertex(vertex_up_right, uv_up_right));
                 vertices.Add(new FontVertex(vertex_down_left, uv_down_left));
-	          }
+              }
 
-            var indices = Enumerable.Range(0, vertices.Count).ToArray();
-
-            commandList.Begin();
+            var indices = Enumerable.Range(0, vertices.Count).Select(i => (ushort)i).ToArray();
 
             var fontVertexBuffer = factory.CreateBuffer(new BufferDescription((uint)vertices.Count * FontVertex.SizeInBytes, BufferUsage.VertexBuffer));
             commandList.UpdateBuffer(fontVertexBuffer, 0, vertices.ToArray());
@@ -352,7 +294,7 @@ namespace GraphicsTutorial
             commandList.UpdateBuffer(fontIndexBuffer, 0, indices);
 
             // We want to render directly to the output window.
-            commandList.SetFramebuffer(graphicsDevice.SwapchainFramebuffer);
+            //commandList.SetFramebuffer(graphicsDevice.SwapchainFramebuffer);
             //commandList.SetFullViewports();
             // commandList.ClearColorTarget(0, RgbaFloat.Black);
             //commandList.ClearDepthStencil(1f);
@@ -371,8 +313,8 @@ namespace GraphicsTutorial
                 vertexOffset: 0,
                 instanceStart: 0);
 
-            commandList.End();
-            graphicsDevice.SubmitCommands(commandList);
+            // commandList.End();
+            // graphicsDevice.SubmitCommands(commandList);
         }
     }
 }

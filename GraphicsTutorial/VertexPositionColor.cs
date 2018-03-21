@@ -8,6 +8,7 @@ namespace GraphicsTutorial
         public const uint SizeInBytes = 28;
 
         public Vector3 Position; // This is the position, in normalized device coordinates.
+
         public RgbaFloat Color; // This is the color of the vertex.
 
         public VertexPositionColor(Vector3 position, RgbaFloat color)
