@@ -292,7 +292,7 @@ namespace GraphicsTutorial
                 vertices.Add(new FontVertex(vertex_down_right, uv_down_right));
                 vertices.Add(new FontVertex(vertex_up_right, uv_up_right));
                 vertices.Add(new FontVertex(vertex_down_left, uv_down_left));
-              }
+            }
 
             var indices = Enumerable.Range(0, vertices.Count).Select(i => (ushort)i).ToArray();
 
