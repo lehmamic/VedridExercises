@@ -54,12 +54,21 @@ namespace GraphicsTutorial
             CreateResources(graphicsDevice, factory);
 
             var stopwatch = Stopwatch.StartNew();
+            long previousFrameTicks = 0;
 
             while (window.Exists)
             {
+                long currentFrameTicks = stopwatch.ElapsedTicks;
+                double deltaMilliseconds = (currentFrameTicks - previousFrameTicks) * (1000.0 / Stopwatch.Frequency);
+                Console.WriteLine($"{deltaMilliseconds:0.###}ms / frame");
+
+                previousFrameTicks = currentFrameTicks;
+
                 window.PumpEvents();
-                Draw(graphicsDevice, window, factory, stopwatch.ElapsedTicks * (1000 / Stopwatch.Frequency));
+                Draw(graphicsDevice, window, factory, (double)currentFrameTicks / Stopwatch.Frequency);
             }
+
+            factory.DisposeCollector.DisposeAll();
         }
 
         private static void CreateResources(GraphicsDevice graphicsDevice, ResourceFactory factory)
@@ -247,7 +256,7 @@ namespace GraphicsTutorial
                 vertexOffset: 0,
                 instanceStart: 0);
 
-            PrintText2D(graphicsDevice, factory, $"{time} milliseconds", 10, 500, 60);
+            PrintText2D(graphicsDevice, factory, $"{time:0.00} sec", 10, 500, 60);
 
             // End() must be called before commands can be submitted for execution.
             commandList.End();
@@ -293,12 +302,6 @@ namespace GraphicsTutorial
             var fontIndexBuffer = factory.CreateBuffer(new BufferDescription((uint)indices.Length * sizeof(ushort), BufferUsage.IndexBuffer));
             commandList.UpdateBuffer(fontIndexBuffer, 0, indices);
 
-            // We want to render directly to the output window.
-            //commandList.SetFramebuffer(graphicsDevice.SwapchainFramebuffer);
-            //commandList.SetFullViewports();
-            // commandList.ClearColorTarget(0, RgbaFloat.Black);
-            //commandList.ClearDepthStencil(1f);
-
             // Set all relevant state to draw our triangle.
             commandList.SetPipeline(fontPipeline);
             commandList.SetVertexBuffer(0, fontVertexBuffer);
@@ -312,9 +315,6 @@ namespace GraphicsTutorial
                 indexStart: 0,
                 vertexOffset: 0,
                 instanceStart: 0);
-
-            // commandList.End();
-            // graphicsDevice.SubmitCommands(commandList);
         }
     }
 }
