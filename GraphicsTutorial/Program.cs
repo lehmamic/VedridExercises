@@ -26,6 +26,8 @@ namespace GraphicsTutorial
         private static ResourceSet modelTextureResourceSet;
         private static ConstructedMeshInfo mesh;
 
+        private static DeviceBuffer fontVertexBuffer;
+        private static DeviceBuffer fontIndexBuffer;
         private static Pipeline fontPipeline;
         private static ResourceSet fontTextureResourceSet;
 
@@ -296,11 +298,36 @@ namespace GraphicsTutorial
 
             var indices = Enumerable.Range(0, vertices.Count).Select(i => (ushort)i).ToArray();
 
-            var fontVertexBuffer = factory.CreateBuffer(new BufferDescription((uint)vertices.Count * FontVertex.SizeInBytes, BufferUsage.VertexBuffer));
-            commandList.UpdateBuffer(fontVertexBuffer, 0, vertices.ToArray());
+            // we only update the buffers if the text vertex data does not fit in, in this case we make it 1.5 times bigger to avoid always require to enlarge the buffer.
+            uint totalVertexBufferSize = (uint)vertices.Count * FontVertex.SizeInBytes;
+            if(fontVertexBuffer == null || fontIndexBuffer.SizeInBytes < totalVertexBufferSize)
+            {
+                if(fontVertexBuffer != null)
+                {
+                    graphicsDevice.DisposeWhenIdle(fontVertexBuffer);
+                }
 
-            var fontIndexBuffer = factory.CreateBuffer(new BufferDescription((uint)indices.Length * sizeof(ushort), BufferUsage.IndexBuffer));
-            commandList.UpdateBuffer(fontIndexBuffer, 0, indices);
+                fontVertexBuffer = factory.CreateBuffer(new BufferDescription((uint)(totalVertexBufferSize * 1.5f), BufferUsage.VertexBuffer));
+            }
+
+            uint totalIndexBufferSize = (uint)indices.Length * sizeof(ushort);
+            if(fontIndexBuffer == null || fontIndexBuffer.SizeInBytes < totalIndexBufferSize)
+            {
+                if(fontIndexBuffer != null)
+                {
+                    graphicsDevice.DisposeWhenIdle(fontIndexBuffer);
+                }
+
+                fontIndexBuffer = factory.CreateBuffer(new BufferDescription((uint)(totalIndexBufferSize * 1.5f), BufferUsage.IndexBuffer));
+            }
+
+            uint vertexOffsetInBytes = fontVertexBuffer.SizeInBytes - totalVertexBufferSize;
+            int vertexOffsetInVertices = (int)vertexOffsetInBytes / FontVertex.SizeInBytes;
+            commandList.UpdateBuffer(fontVertexBuffer, vertexOffsetInBytes, vertices.ToArray());
+
+            uint indexOffsetInBytes = fontIndexBuffer.SizeInBytes - totalIndexBufferSize;
+            uint indexOffsetInElements = indexOffsetInBytes / sizeof(ushort);
+            commandList.UpdateBuffer(fontIndexBuffer, indexOffsetInBytes, indices);
 
             // Set all relevant state to draw our triangle.
             commandList.SetPipeline(fontPipeline);
@@ -312,8 +339,8 @@ namespace GraphicsTutorial
             commandList.DrawIndexed(
                 indexCount: (uint)indices.Length,
                 instanceCount: 1,
-                indexStart: 0,
-                vertexOffset: 0,
+                indexStart: indexOffsetInElements,
+                vertexOffset: vertexOffsetInVertices,
                 instanceStart: 0);
         }
     }
