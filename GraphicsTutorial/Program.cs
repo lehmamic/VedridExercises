@@ -83,7 +83,7 @@ namespace GraphicsTutorial
             modelBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
             lightPositionBuffer = factory.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
 
-            var objFile = ReadModel("suzanne.obj");
+            var objFile = ReadModel("JetFighter.obj");
             mesh = objFile.GetFirstMesh();
 
             vertexBuffer = factory.CreateBuffer(new BufferDescription((uint)mesh.Vertices.Length * VertexPositionNormalTexture.SizeInBytes, BufferUsage.VertexBuffer));
@@ -92,7 +92,7 @@ namespace GraphicsTutorial
             indexBuffer = factory.CreateBuffer(new BufferDescription((uint)mesh.Indices.Length * sizeof(ushort), BufferUsage.IndexBuffer));
             commandList.UpdateBuffer(indexBuffer, 0, mesh.Indices);
 
-            var image = new ImageSharpTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "uvmap.png"));
+            var image = new ImageSharpTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "UVReferenz.png"));
             Texture surfaceTexture = image.CreateDeviceTexture(graphicsDevice, factory);
             TextureView surfaceTextureView = factory.CreateTextureView(surfaceTexture);
 
