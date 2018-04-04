@@ -30,7 +30,7 @@ void main()
     // Material properties
     vec3 MaterialDiffuseColor = texture(DiffuseTexture, UV).rgb;
     vec3 MaterialAmbientColor = vec3(0.1, 0.1, 0.1) * MaterialDiffuseColor;
-    vec3 MaterialSpecularColor = vec3(0.3, 0.3, 0.3);
+    vec3 MaterialSpecularColor = texture(SpecularTexture, UV ).rgb * 0.3;
 
     // Local normal, in tangent space. V tex coordinate is inverted because normal map is in TGA (not in DDS) for better quality
     vec3 TextureNormal_Tangentspace = normalize(texture(NormalTexture, vec2(UV.x, -UV.y)).rgb * 2.0 - 1.0);
