@@ -6,6 +6,8 @@ in vec3 Position_Worldspace;
 in vec3 Normal_Cameraspace;
 in vec3 EyeDirection_Cameraspace;
 in vec3 LightDirection_Cameraspace;
+in vec3 LightDirection_Tangentspace;
+in vec3 EyeDirection_Tangentspace;
 
 layout(std140) uniform LightPosition
 {
@@ -30,11 +32,14 @@ void main()
     vec3 MaterialAmbientColor = vec3(0.1, 0.1, 0.1) * MaterialDiffuseColor;
     vec3 MaterialSpecularColor = vec3(0.3, 0.3, 0.3);
 
+    // Local normal, in tangent space
+    vec3 TextureNormal_Tangentspace = normalize(texture(NormalTextureSampler, UV).rgb * 2.0 - 1.0);
+
     // Distance to the light
     float distance = length(LightPosition_Worldspace - Position_Worldspace);
 
-    // Normal of the computed fragment, in camera space
-    vec3 n = normalize(Normal_Cameraspace);
+    // Normal of the computed fragment, in camera space (instead of normalize(Normal_Cameraspace))
+    vec3 n = TextureNormal_Tangentspace;
     // Direction of the light (from the fragment to the light)
     vec3 l = normalize(LightDirection_Cameraspace);
     // Cosine of the angle between the normal and the light direction, 

@@ -33,9 +33,13 @@ out vec3 Normal_Cameraspace;
 out vec3 EyeDirection_Cameraspace;
 out vec3 LightDirection_Cameraspace;
 
+out vec3 LightDirection_Tangentspace;
+out vec3 EyeDirection_Tangentspace;
+
 void main()
 {
     mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+    mat3 MV3x3 = mat3(ViewMatrix * ModelMatrix);
 
     // Output position of the vertex, in clip space : MVP * position
     gl_Position = MVP * vec4(Position, 1);
@@ -56,4 +60,18 @@ void main()
     Normal_Cameraspace = ( ViewMatrix * ModelMatrix * vec4(Normal, 0)).xyz; // Only correct if ModelMatrix does not scale the model ! Use its inverse transpose if not.
 
     UV = TextureCoordinate;
+
+    // model to camera = ModelView
+    vec3 vertexTangent_Cameraspace = MV3x3 * Tangent;
+    vec3 vertexBitangent_Cameraspace = MV3x3 * Bitangent;
+    vec3 vertexNormal_Cameraspace = MV3x3 * Normal;
+
+    mat3 TBN = transpose(mat3(
+      vertexTangent_Cameraspace,
+      vertexBitangent_Cameraspace,
+      vertexNormal_Cameraspace
+    )); // You can use dot products instead of building this matrix and transposing it. See References for details.
+
+    LightDirection_Tangentspace = TBN * LightDirection_Cameraspace;
+    EyeDirection_Tangentspace =  TBN * EyeDirection_Cameraspace;
 }
