@@ -22,7 +22,7 @@ namespace GraphicsTutorial
         private static Pipeline pipeline;
         private static ResourceSet projectionViewResourceSet;
         private static ResourceSet modelTextureResourceSet;
-        private static ConstructedMeshInfo mesh;
+        private static ConstructedMesh mesh;
 
         static void Main(string[] args)
         {
@@ -66,9 +66,9 @@ namespace GraphicsTutorial
             lightPositionBuffer = factory.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
 
             var objFile = ReadModel("suzanne.obj");
-            mesh = objFile.GetFirstMesh();
+            mesh = objFile.GetFirstMeshWithTangentInfo();
 
-            vertexBuffer = factory.CreateBuffer(new BufferDescription((uint)mesh.Vertices.Length * VertexPositionNormalTexture.SizeInBytes, BufferUsage.VertexBuffer));
+            vertexBuffer = factory.CreateBuffer(new BufferDescription((uint)mesh.Vertices.Length * VertexPositionNormalTextureTangent.SizeInBytes, BufferUsage.VertexBuffer));
             commandList.UpdateBuffer(vertexBuffer, 0, mesh.Vertices);
 
             indexBuffer = factory.CreateBuffer(new BufferDescription((uint)mesh.Indices.Length * sizeof(ushort), BufferUsage.IndexBuffer));
@@ -88,7 +88,9 @@ namespace GraphicsTutorial
                     new VertexLayoutDescription(
                         new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
                         new VertexElementDescription("Normal", VertexElementSemantic.Normal, VertexElementFormat.Float3),
-                        new VertexElementDescription("TextureCoordinate", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
+                        new VertexElementDescription("TextureCoordinate", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
+                        new VertexElementDescription("Tangent", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3),
+                        new VertexElementDescription("Bitangent", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3))
                 },
                 new[]
                 {
@@ -144,62 +146,6 @@ namespace GraphicsTutorial
             {
                 return parser.Parse(stream);
             }
-        }
-
-        private static VertexPositionTexture[] GetCubeVertices()
-        {
-            var vertices = new VertexPositionTexture[]
-            {
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f,-0.5f), new Vector2(0.000059f, 1.0f - 0.000004f)),
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f, 0.5f), new Vector2(0.000103f, 1.0f - 0.336048f)),
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f, 0.5f), new Vector2(0.335973f, 1.0f - 0.335903f)),
-
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f,-0.5f), new Vector2(1.000023f, 1.0f - 0.000013f)),
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f,-0.5f), new Vector2(0.667979f, 1.0f - 0.335851f)),
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f,-0.5f), new Vector2(0.999958f, 1.0f - 0.336064f)),
-
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f, 0.5f), new Vector2(0.667979f, 1.0f - 0.335851f)),
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f,-0.5f), new Vector2(0.336024f, 1.0f - 0.671877f)),
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f,-0.5f), new Vector2(0.667969f, 1.0f - 0.671889f)),
-
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f,-0.5f), new Vector2(1.000023f, 1.0f - 0.000013f)),
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f,-0.5f), new Vector2(0.668104f, 1.0f - 0.000013f)),
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f,-0.5f), new Vector2(0.667979f, 1.0f - 0.335851f)),
-
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f,-0.5f), new Vector2(0.000059f, 1.0f - 0.000004f)),
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f, 0.5f), new Vector2(0.335973f, 1.0f - 0.335903f)),
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f,-0.5f), new Vector2(0.336098f, 1.0f - 0.000071f)),
-
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f, 0.5f), new Vector2(0.667979f, 1.0f - 0.335851f)),
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f, 0.5f), new Vector2(0.335973f, 1.0f - 0.335903f)),
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f,-0.5f), new Vector2(0.336024f, 1.0f - 0.671877f)),
-
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f, 0.5f), new Vector2(1.000004f, 1.0f - 0.671847f)),
-                new VertexPositionTexture(new Vector3(-0.5f,-0.5f, 0.5f), new Vector2(0.999958f, 1.0f - 0.336064f)),
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f, 0.5f), new Vector2(0.667979f, 1.0f - 0.335851f)),
-
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f, 0.5f), new Vector2(0.668104f, 1.0f - 0.000013f)),
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f,-0.5f), new Vector2(0.335973f, 1.0f - 0.335903f)),
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f,-0.5f), new Vector2(0.667979f, 1.0f - 0.335851f)),
-
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f,-0.5f), new Vector2(0.335973f, 1.0f - 0.335903f)),
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f, 0.5f), new Vector2(0.668104f, 1.0f - 0.000013f)),
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f, 0.5f), new Vector2(0.336098f, 1.0f - 0.000071f)),
-
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f, 0.5f), new Vector2(0.000103f, 1.0f - 0.336048f)),
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f,-0.5f), new Vector2(0.000004f, 1.0f - 0.671870f)),
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f,-0.5f), new Vector2(00.336024f, 1.0f - 0.671877f)),
-
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f, 0.5f), new Vector2(0.000103f, 1.0f - 0.336048f)),
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f,-0.5f), new Vector2(0.336024f, 1.0f - 0.671877f)),
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f, 0.5f), new Vector2(0.335973f, 1.0f - 0.335903f)),
-
-                new VertexPositionTexture(new Vector3(0.5f, 0.5f, 0.5f), new Vector2(0.667969f, 1.0f - 0.671889f)),
-                new VertexPositionTexture(new Vector3(-0.5f, 0.5f, 0.5f), new Vector2(1.000004f, 1.0f - 0.671847f)),
-                new VertexPositionTexture(new Vector3(0.5f,-0.5f, 0.5f), new Vector2(0.667979f, 1.0f - 0.335851f))
-            };
-
-            return vertices;
         }
 
         private static Shader LoadShader(GraphicsDevice graphicsDevice, ResourceFactory factory, ShaderStages stage)

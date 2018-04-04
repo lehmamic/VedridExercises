@@ -3,6 +3,8 @@
 in vec3 Position;
 in vec3 Normal;
 in vec2 TextureCoordinate;
+in vec3 Tangent;
+in vec3 Bitangent;
 
 layout(std140) uniform Projection
 {
