@@ -65,7 +65,7 @@ namespace GraphicsTutorial
             modelBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
             lightPositionBuffer = factory.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
 
-            var objFile = ReadModel("suzanne.obj");
+            var objFile = ReadModel("cylinder.obj");
             mesh = objFile.GetFirstMeshWithTangentInfo();
 
             vertexBuffer = factory.CreateBuffer(new BufferDescription((uint)mesh.Vertices.Length * VertexPositionNormalTextureTangent.SizeInBytes, BufferUsage.VertexBuffer));
@@ -74,9 +74,17 @@ namespace GraphicsTutorial
             indexBuffer = factory.CreateBuffer(new BufferDescription((uint)mesh.Indices.Length * sizeof(ushort), BufferUsage.IndexBuffer));
             commandList.UpdateBuffer(indexBuffer, 0, mesh.Indices);
 
-            var stoneImage = new ImageSharpTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "uvmap.png"));
-            Texture surfaceTexture = stoneImage.CreateDeviceTexture(graphicsDevice, factory);
-            TextureView surfaceTextureView = factory.CreateTextureView(surfaceTexture);
+            var diffuseImage = new ImageSharpTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "diffuse.png"));
+            Texture diffuseTexture = diffuseImage.CreateDeviceTexture(graphicsDevice, factory);
+            TextureView diffuseTextureView = factory.CreateTextureView(diffuseTexture);
+
+            var specularImage = new ImageSharpTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "specular.png"));
+            Texture specularTexture = specularImage.CreateDeviceTexture(graphicsDevice, factory);
+            TextureView specularTextureView = factory.CreateTextureView(specularTexture);
+
+            var normalImage = new ImageSharpTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "normal.bmp"));
+            Texture normalTexture = normalImage.CreateDeviceTexture(graphicsDevice, factory);
+            TextureView normalTextureView = factory.CreateTextureView(normalTexture);
 
             commandList.End();
             graphicsDevice.SubmitCommands(commandList);
@@ -107,8 +115,10 @@ namespace GraphicsTutorial
             ResourceLayout modelTextureLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
                     new ResourceLayoutElementDescription("Model", ResourceKind.UniformBuffer, ShaderStages.Vertex),
-                    new ResourceLayoutElementDescription("SurfaceTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
-                    new ResourceLayoutElementDescription("SurfaceSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
+                    new ResourceLayoutElementDescription("DiffuseTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
+                    new ResourceLayoutElementDescription("SpecularTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
+                    new ResourceLayoutElementDescription("NormalTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
+                    new ResourceLayoutElementDescription("DiffuseSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
             var rasterizeState =  new RasterizerStateDescription(
                 cullMode: FaceCullMode.None,
@@ -135,7 +145,9 @@ namespace GraphicsTutorial
             modelTextureResourceSet = factory.CreateResourceSet(new ResourceSetDescription(
                 modelTextureLayout,
                 modelBuffer,
-                surfaceTextureView,
+                diffuseTextureView,
+                specularTextureView,
+                normalTextureView,
                 graphicsDevice.Aniso4xSampler));
         }
 

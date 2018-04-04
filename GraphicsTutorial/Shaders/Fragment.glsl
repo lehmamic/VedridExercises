@@ -12,7 +12,9 @@ layout(std140) uniform LightPosition
     vec3 LightPosition_Worldspace;
 };
 
-uniform sampler2D SurfaceTexture;
+uniform sampler2D DiffuseTextureSampler;
+uniform sampler2D NormalTextureSampler;
+uniform sampler2D SpecularTextureSampler;
 
 out vec3 Color;
 
@@ -24,7 +26,7 @@ void main()
     float LightPower = 50.0f;
 
     // Material properties
-    vec3 MaterialDiffuseColor = texture(SurfaceTexture, UV).rgb;
+    vec3 MaterialDiffuseColor = texture(DiffuseTextureSampler, UV).rgb;
     vec3 MaterialAmbientColor = vec3(0.1, 0.1, 0.1) * MaterialDiffuseColor;
     vec3 MaterialSpecularColor = vec3(0.3, 0.3, 0.3);
 
